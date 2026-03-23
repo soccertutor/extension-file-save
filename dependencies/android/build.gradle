@@ -1,0 +1,15 @@
+apply plugin: 'com.android.library'
+
+android {
+    namespace 'org.haxe.extension.filesave'
+    compileSdkVersion 35
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 35
+    }
+}
+
+dependencies {
+    compileOnly project(':deps:extension-api')
+}

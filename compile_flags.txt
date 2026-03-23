@@ -1,0 +1,3 @@
+-I./native
+-I./project/common
+-I./.hxcpp-include

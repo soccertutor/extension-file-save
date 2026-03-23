@@ -1,0 +1,56 @@
+<xml>
+	<set name="HXCPP_OPTIMIZE_LINK" value="1" unless="debug || fulldebug" />
+
+	<include name="${haxelib:hxcpp}/build-tool/BuildCommon.xml" />
+
+	<set name="SRCDIR" value="${haxelib:extension-file-save}/project" />
+	<set name="NATIVE" value="${haxelib:extension-file-save}/native" />
+
+	<files id="common">
+		<file name="${SRCDIR}/common/ExternalInterface.cpp" />
+	</files>
+
+	<files id="macos">
+		<compilerflag value="-objc" />
+		<file name="${NATIVE}/filesave_mac.mm" />
+	</files>
+
+	<files id="ios">
+		<compilerflag value="-objc" />
+		<file name="${NATIVE}/filesave_ios.mm" />
+	</files>
+
+	<target
+		id="NDLL"
+		output="${LIBPREFIX}extension_file_save"
+		tool="linker"
+		toolid="${STD_MODULE_LINK}"
+	>
+		<outdir name="ndll/${BINDIR}" />
+		<ext value=".ndll" if="macos" />
+		<ext value="${LIBEXTRA}.a" if="iphoneos || iphonesim" />
+
+		<files id="common" />
+
+		<section if="macos">
+			<files id="macos" />
+			<vflag name="-framework" value="AppKit" />
+			<vflag name="-framework" value="UniformTypeIdentifiers" />
+			<lib name="-Wl,-dead_strip" unless="debug || fulldebug" />
+			<section unless="MACOSX_DEPLOYMENT_TARGET">
+				<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.13" unless="HXCPP_ARM64" />
+				<setenv name="MACOSX_DEPLOYMENT_TARGET" value="11.7" if="HXCPP_ARM64" />
+			</section>
+		</section>
+
+		<section if="iphoneos || iphonesim">
+			<files id="ios" />
+			<vflag name="-framework" value="UIKit" />
+			<vflag name="-framework" value="UniformTypeIdentifiers" />
+		</section>
+	</target>
+
+	<target id="default">
+		<target id="NDLL" />
+	</target>
+</xml>

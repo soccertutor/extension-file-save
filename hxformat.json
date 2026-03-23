@@ -1,0 +1,43 @@
+{
+  "whitespace": {
+    "typeHintColonPolicy": "after",
+    "typeCheckColonPolicy": "after",
+    "arrowFunctionsPolicy": "around",
+    "functionTypeHaxe3Policy": "around",
+    "functionTypeHaxe4Policy": "around"
+  },
+  "emptyLines": {
+    "importAndUsing": {
+      "betweenImportsLevel": "firstLevelPackage",
+      "betweenImports": 1,
+      "beforeUsing": 1
+    },
+    "maxAnywhereInFile": 1,
+    "classEmptyLines": {
+      "beginType": 1,
+      "endType": 1
+    },
+    "afterLeftCurly": "keep",
+    "beforeRightCurly": "keep",
+    "finalNewline": false,
+    "abstractEmptyLines": {
+      "beginType": 1,
+      "endType": 1
+    },
+    "interfaceEmptyLines": {
+      "beginType": 1,
+      "endType": 1
+    },
+    "externClassEmptyLines": {
+      "beginType": 1,
+      "endType": 1
+    }
+  },
+  "wrapping": {
+    "maxLineLength": 140
+  },
+  "sameLine": {
+    "functionBody": "same",
+    "anonFunctionBody": "same"
+  }
+}

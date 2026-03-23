@@ -1,0 +1,5 @@
+ndll/
+obj/
+dependencies/android/.gradle/
+.hxcpp-include/
+.DS_Store

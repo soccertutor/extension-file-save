@@ -1,0 +1,35 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Haxe 4.3.6
+        uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.6
+
+      - name: Install hxcpp
+        run: haxelib install hxcpp
+
+      - name: Register local lib
+        run: haxelib dev extension-file-save .
+
+      - name: Build macOS ARM64
+        run: haxelib run hxcpp Build.xml -Dmacos -DHXCPP_ARM64
+
+      - name: Upload ndll artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-file-save-macos-arm64
+          path: ndll/MacArm64/

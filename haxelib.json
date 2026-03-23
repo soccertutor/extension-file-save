@@ -1,0 +1,11 @@
+{
+	"name": "extension-file-save",
+	"url": "",
+	"license": "MIT",
+	"tags": ["openfl", "file", "save", "native"],
+	"description": "Cross-platform file save dialog for OpenFL/hxcpp",
+	"version": "0.1.0",
+	"releasenote": "Initial release",
+	"contributors": ["soccertutor", "AxGord"],
+	"dependencies": {}
+}
