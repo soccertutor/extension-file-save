@@ -1,5 +1,7 @@
 # extension-file-save
 
+[![Build](https://img.shields.io/github/actions/workflow/status/soccertutor/extension-file-save/build.yml)](https://github.com/soccertutor/extension-file-save/actions/workflows/build.yml) [![Haxelib](https://img.shields.io/badge/haxelib-v0.1.0-blue)](https://lib.haxe.org/p/extension-file-save/) [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 A cross-platform OpenFL/Lime native extension for saving files via native OS file pickers. Supports desktop (direct path write) and mobile (copy-to-destination) workflows.
 
 ## Platform Support
@@ -60,7 +62,7 @@ lime rebuild . <target> -release
 Or directly via hxcpp:
 
 ```sh
-haxelib run hxcpp Build.xml -D<platform> -DHXCPP_ARM64
+haxelib run hxcpp Build-hxcpp.xml -D<platform> -DHXCPP_ARM64
 ```
 
 | Target   | lime rebuild          | hxcpp flags                    |

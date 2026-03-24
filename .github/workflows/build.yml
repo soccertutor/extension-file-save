@@ -1,14 +1,56 @@
-name: Build
+name: Build & Publish
 
 on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
-  build-macos:
-    runs-on: macos-15
+  detect-release:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    outputs:
+      is_release: ${{ steps.check.outputs.is_release }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Check version change
+        id: check
+        run: |
+          set -euo pipefail
+          NEW=$(jq -r .version haxelib.json)
+          OLD=$(git show HEAD~1:haxelib.json 2>/dev/null | jq -r .version) || OLD="0.0.0"
+          if [ "$NEW" != "$OLD" ]; then
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+            echo "version=$NEW" >> "$GITHUB_OUTPUT"
+            echo "Version changed: $OLD → $NEW"
+          else
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+            echo "Version unchanged: $NEW"
+          fi
+
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: mac
+            label: mac-arm64
+            runner: macos-15
+            flags: "-arm64 -release"
+            ndll_dir: MacArm64
+          - target: ios
+            label: ios
+            runner: macos-15
+            flags: "-release"
+            ndll_dir: iPhone
+
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    name: ${{ matrix.label }} (${{ matrix.runner }})
 
     steps:
       - uses: actions/checkout@v4
@@ -21,8 +63,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/haxelib
-          key: haxelib-mac-arm64-${{ hashFiles('haxelib.json') }}
-          restore-keys: haxelib-mac-arm64-
+          key: haxelib-${{ matrix.target }}-${{ hashFiles('haxelib.json') }}
+          restore-keys: haxelib-${{ matrix.target }}-
 
       - name: Install dependencies
         run: |
@@ -31,11 +73,58 @@ jobs:
           haxelib install lime --quiet
           haxelib dev extension-file-save .
 
-      - name: Build macOS ARM64
-        run: haxelib run lime rebuild . macos -release
+      - name: Build NDLL
+        run: haxelib run lime rebuild . ${{ matrix.target }} ${{ matrix.flags }}
 
-      - name: Upload ndll artifact
+      - name: Upload NDLL artifact
         uses: actions/upload-artifact@v4
         with:
-          name: extension-file-save-macos-arm64
-          path: ndll/MacArm64/
+          name: ${{ matrix.ndll_dir }}
+          path: ndll/${{ matrix.ndll_dir }}/
+          retention-days: 5
+
+  publish:
+    needs: [detect-release, build]
+    runs-on: ubuntu-latest
+    if: needs.detect-release.outputs.is_release == 'true'
+    permissions:
+      contents: write
+    env:
+      TAG: v${{ needs.detect-release.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: krdlab/setup-haxe@v2
+        with:
+          haxe-version: 4.3.6
+
+      - name: Download all NDLL artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ndll/
+
+      - name: Show NDLL layout
+        run: find ndll/ -type f | head -50
+
+      - name: Create git tag
+        run: |
+          git tag "$TAG" 2>/dev/null || true
+          git push origin "$TAG"
+
+      - name: Submit to haxelib
+        run: |
+          zip -r extension-file-save.zip \
+            haxelib.json include.xml README.md \
+            extension/ native/ project/ ndll/
+          haxelib submit extension-file-save.zip soccertutor ${{ secrets.HAXELIB_PASSWORD }}
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES=$(jq -r .releasenote haxelib.json)
+          gh release create "$TAG" \
+            extension-file-save.zip \
+            --title "$TAG" \
+            --notes "$NOTES"
