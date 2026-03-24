@@ -8,25 +8,31 @@ on:
 
 jobs:
   build-macos:
-    runs-on: macos-latest
+    runs-on: macos-15
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install Haxe 4.3.6
-        uses: krdlab/setup-haxe@v2
+      - uses: krdlab/setup-haxe@v2
         with:
           haxe-version: 4.3.6
+
+      - name: Cache haxelib
+        uses: actions/cache@v4
+        with:
+          path: ~/haxelib
+          key: haxelib-mac-arm64-${{ hashFiles('haxelib.json') }}
+          restore-keys: haxelib-mac-arm64-
 
       - name: Install dependencies
         run: |
           haxelib setup ~/haxelib
           haxelib install hxcpp --quiet
+          haxelib install lime --quiet
           haxelib dev extension-file-save .
 
       - name: Build macOS ARM64
-        run: haxelib run hxcpp Build.xml -Dmacos -DHXCPP_ARM64
+        run: haxelib run lime rebuild . macos -release
 
       - name: Upload ndll artifact
         uses: actions/upload-artifact@v4
