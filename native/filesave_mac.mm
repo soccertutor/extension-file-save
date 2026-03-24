@@ -1,4 +1,5 @@
 #import <AppKit/AppKit.h>
+#import <CoreServices/CoreServices.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #include <hx/CFFI.h>
 
@@ -10,6 +11,22 @@ static void applyMimeFilter(NSSavePanel* panel, const char* mime) {
   if (@available(macOS 11.0, *)) {
     UTType* type = [UTType typeWithMIMEType:[NSString stringWithUTF8String:mime]];
     if (type != nil) [panel setAllowedContentTypes:@[ type ]];
+  } else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    CFStringRef cf_mime =
+        CFStringCreateWithCString(kCFAllocatorDefault, mime, kCFStringEncodingUTF8);
+    CFStringRef uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, cf_mime, NULL);
+    CFRelease(cf_mime);
+    if (uti != NULL) {
+      CFStringRef ext = UTTypeCopyPreferredTagWithClass(uti, kUTTagClassFilenameExtension);
+      CFRelease(uti);
+      if (ext != NULL) {
+        [panel setAllowedFileTypes:@[ (__bridge NSString*)ext ]];
+        CFRelease(ext);
+      }
+    }
+#pragma clang diagnostic pop
   }
 }
 

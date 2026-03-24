@@ -15,15 +15,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Haxe 4.3.6
-        uses: krdlab/setup-haxe@v1
+        uses: krdlab/setup-haxe@v2
         with:
           haxe-version: 4.3.6
 
-      - name: Install hxcpp
-        run: haxelib install hxcpp
-
-      - name: Register local lib
-        run: haxelib dev extension-file-save .
+      - name: Install dependencies
+        run: |
+          haxelib setup ~/haxelib
+          haxelib install hxcpp --quiet
+          haxelib dev extension-file-save .
 
       - name: Build macOS ARM64
         run: haxelib run hxcpp Build.xml -Dmacos -DHXCPP_ARM64
