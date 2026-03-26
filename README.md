@@ -62,7 +62,7 @@ lime rebuild . <target> -release
 Or directly via hxcpp:
 
 ```sh
-haxelib run hxcpp Build-hxcpp.xml -D<platform> -DHXCPP_ARM64
+haxelib run hxcpp project/Build.xml -D<platform> -DHXCPP_ARM64
 ```
 
 | Target   | lime rebuild          | hxcpp flags                    |
