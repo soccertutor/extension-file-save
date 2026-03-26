@@ -8,6 +8,8 @@ import cpp.Prime;
 #elseif android
 import lime.system.JNI;
 #elseif (windows || linux)
+import haxe.Exception;
+
 import lime.ui.FileDialog;
 import lime.ui.FileDialogType;
 
@@ -18,7 +20,7 @@ import sys.io.File;
  * Cross-platform file save dialog.
  *
  * Desktop: requestSavePath → write directly to path → releasePath.
- * Mobile: saveFile copies an existing file to user-chosen location.
+ * Mobile: saveFile moves (default) or copies an existing file to user-chosen location.
  */
 @:nullSafety(Strict) final class FileSave {
 
@@ -28,8 +30,8 @@ import sys.io.File;
 
 	private static final _fs_releasePath: Callable<Void -> cpp.Void> = Prime.load('extension_file_save', 'fs_releasePath', 'v', false);
 
-	private static final _fs_saveFile: Callable<ConstCharStar -> ConstCharStar -> ConstCharStar -> Object ->
-		cpp.Void> = Prime.load('extension_file_save', 'fs_saveFile', 'cccov', false);
+	private static final _fs_saveFile: Callable<ConstCharStar -> ConstCharStar -> ConstCharStar -> Bool -> Object ->
+		cpp.Void> = Prime.load('extension_file_save', 'fs_saveFile', 'cccbov', false);
 
 	/**
 	 * Show "Save As" dialog, return chosen path for direct writing.
@@ -43,11 +45,12 @@ import sys.io.File;
 	public static function releasePath(): Void _fs_releasePath();
 
 	/**
-	 * Show file picker, copy source file to user-chosen location.
+	 * Show file picker, move or copy source file to user-chosen location.
 	 * File must already exist at sourcePath.
+	 * By default moves the file (source is deleted). Pass asCopy=true to keep the source.
 	 */
-	public static function saveFile(sourcePath: String, suggestedName: String, mimeType: String,
-			callback: (success: Bool) -> Void): Void _fs_saveFile(sourcePath, suggestedName, mimeType, callback);
+	public static function saveFile(sourcePath: String, suggestedName: String, mimeType: String, callback: (success: Bool) -> Void,
+			asCopy: Bool = false): Void _fs_saveFile(sourcePath, suggestedName, mimeType, asCopy, callback);
 
 	#elseif (windows || linux)
 	/**
@@ -66,16 +69,20 @@ import sys.io.File;
 	public static function releasePath(): Void {}
 
 	/**
-	 * Show file picker, copy source file to user-chosen location.
+	 * Show file picker, move or copy source file to user-chosen location.
 	 * File must already exist at sourcePath.
+	 * By default moves the file (source is deleted). Pass asCopy=true to keep the source.
 	 */
-	public static function saveFile(sourcePath: String, suggestedName: String, mimeType: String, callback: (success: Bool) -> Void): Void {
+	public static function saveFile(sourcePath: String, suggestedName: String, mimeType: String, callback: (success: Bool) -> Void,
+			asCopy: Bool = false): Void {
 		final dialog: FileDialog = new FileDialog();
 		dialog.onSelect.add(path -> {
 			try {
 				File.saveBytes(path, File.getBytes(sourcePath));
+				if (!asCopy)
+					sys.FileSystem.deleteFile(sourcePath);
 				callback(true);
-			} catch (_:Dynamic) {
+			} catch (exception:Exception) {
 				callback(false);
 			}
 		});
@@ -93,15 +100,16 @@ import sys.io.File;
 		};
 	}
 	#elseif android
-	private static var _initialized: Bool = false;
-
-	private static var _saveCallback: Null<(Bool) -> Void> = null;
-
 	private static final _jni_initialize: Dynamic -> Void = JNI.createStaticMethod('org.haxe.extension.FileSaveExtension', 'initialize',
 		'(Lorg/haxe/lime/HaxeObject;)V');
 
-	private static final _jni_saveFile: String -> String -> String -> Void = JNI.createStaticMethod('org.haxe.extension.FileSaveExtension',
-		'saveFile', '(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V');
+	private static final _jni_saveFile: String -> String -> String -> Bool ->
+		Void = JNI.createStaticMethod('org.haxe.extension.FileSaveExtension', 'saveFile',
+		'(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V');
+
+	private static var _initialized: Bool = false;
+
+	private static var _saveCallback: Null<(Bool) -> Void> = null;
 
 	private static function _ensureInit(): Void {
 		if (!_initialized) {
@@ -116,13 +124,17 @@ import sys.io.File;
 	public static function releasePath(): Void {}
 
 	/**
-	 * Show file picker, copy source file to user-chosen location.
+	 * Show file picker, move or copy source file to user-chosen location.
 	 * File must already exist at sourcePath.
+	 * By default moves the file (source is deleted). Pass asCopy=true to keep the source.
 	 */
-	public static function saveFile(sourcePath: String, suggestedName: String, mimeType: String, callback: (success: Bool) -> Void): Void {
+	public static function saveFile(sourcePath: String, suggestedName: String, mimeType: String, callback: (success: Bool) -> Void,
+			asCopy: Bool = false): Void {
 		_ensureInit();
+		if (_saveCallback != null)
+			_saveCallback(false);
 		_saveCallback = callback;
-		_jni_saveFile(sourcePath, suggestedName, mimeType);
+		_jni_saveFile(sourcePath, suggestedName, mimeType, asCopy);
 	}
 	#end
 
@@ -130,7 +142,7 @@ import sys.io.File;
 
 #if android
 @:access(extension.filesave.FileSave)
-private class AndroidHandler {
+@:nullSafety(Strict) private final class AndroidHandler {
 
 	public function new() {}
 

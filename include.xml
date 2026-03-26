@@ -1,7 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <extension>
 	<ndll name="extension_file_save" if="mac || ios" />
-	<dependency name="extension_file_save" path="dependencies/android" if="android" />
+	<dependency name="UIKit" if="ios" />
+	<dependency
+    name="extension_file_save"
+    path="dependencies/android"
+    if="android"
+  />
 	<android extension="org.haxe.extension.FileSaveExtension" if="android" />
 
 </extension>

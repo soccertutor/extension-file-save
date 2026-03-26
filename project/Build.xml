@@ -45,8 +45,6 @@
 
 		<section if="iphoneos || iphonesim">
 			<files id="ios" />
-			<vflag name="-framework" value="UIKit" />
-			<vflag name="-framework" value="UniformTypeIdentifiers" />
 		</section>
 	</target>
 

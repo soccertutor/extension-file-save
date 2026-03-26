@@ -6,135 +6,153 @@
 static NSURL* security_scoped_url_ = nil;
 static AutoGCRoot* on_select_root_ = nullptr;
 static AutoGCRoot* on_cancel_root_ = nullptr;
+static bool panel_open_ = false;
 
 static void applyMimeFilter(NSSavePanel* panel, const char* mime) {
-  if (@available(macOS 11.0, *)) {
-    UTType* type = [UTType typeWithMIMEType:[NSString stringWithUTF8String:mime]];
-    if (type != nil) [panel setAllowedContentTypes:@[ type ]];
-  } else {
+	if (@available(macOS 11.0, *)) {
+		UTType* type = [UTType typeWithMIMEType:[NSString stringWithUTF8String:mime]];
+		if (type != nil) [panel setAllowedContentTypes:@[ type ]];
+	} else {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    CFStringRef cf_mime =
-        CFStringCreateWithCString(kCFAllocatorDefault, mime, kCFStringEncodingUTF8);
-    CFStringRef uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, cf_mime, NULL);
-    CFRelease(cf_mime);
-    if (uti != NULL) {
-      CFStringRef ext = UTTypeCopyPreferredTagWithClass(uti, kUTTagClassFilenameExtension);
-      CFRelease(uti);
-      if (ext != NULL) {
-        [panel setAllowedFileTypes:@[ (__bridge NSString*)ext ]];
-        CFRelease(ext);
-      }
-    }
+		CFStringRef cf_mime = CFStringCreateWithCString(kCFAllocatorDefault, mime, kCFStringEncodingUTF8);
+		CFStringRef uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, cf_mime, NULL);
+		CFRelease(cf_mime);
+		if (uti != NULL) {
+			CFStringRef ext = UTTypeCopyPreferredTagWithClass(uti, kUTTagClassFilenameExtension);
+			CFRelease(uti);
+			if (ext != NULL) {
+				[panel setAllowedFileTypes:@[ (__bridge NSString*)ext ]];
+				CFRelease(ext);
+			}
+		}
 #pragma clang diagnostic pop
-  }
+	}
 }
 
-extern "C" void filesave_requestSavePath(const char* name, const char* mime, value onSelect,
-                                         value onCancel) {
-  delete on_select_root_;
-  delete on_cancel_root_;
-  on_select_root_ = new AutoGCRoot(onSelect);
-  on_cancel_root_ = new AutoGCRoot(onCancel);
+extern "C" void filesave_requestSavePath(const char* name, const char* mime, value onSelect, value onCancel) {
+	if (panel_open_) {
+		val_call0(onCancel);
+		return;
+	}
 
-  @autoreleasepool {
-    NSSavePanel* panel = [NSSavePanel savePanel];
-    [panel setNameFieldStringValue:[NSString stringWithUTF8String:name]];
-    [panel setCanCreateDirectories:YES];
-    [panel setExtensionHidden:NO];
+	delete on_select_root_;
+	delete on_cancel_root_;
+	on_select_root_ = new AutoGCRoot(onSelect);
+	on_cancel_root_ = new AutoGCRoot(onCancel);
 
-    applyMimeFilter(panel, mime);
+	@autoreleasepool {
+		NSSavePanel* panel = [NSSavePanel savePanel];
+		[panel setNameFieldStringValue:[NSString stringWithUTF8String:name]];
+		[panel setCanCreateDirectories:YES];
+		[panel setExtensionHidden:NO];
 
-    NSWindow* keyWindow = [[NSApplication sharedApplication] keyWindow];
-    if (keyWindow == nil) {
-      val_call0(on_cancel_root_->get());
-      delete on_select_root_;
-      delete on_cancel_root_;
-      on_select_root_ = nullptr;
-      on_cancel_root_ = nullptr;
-      return;
-    }
+		applyMimeFilter(panel, mime);
 
-    [panel beginSheetModalForWindow:keyWindow
-                  completionHandler:^(NSModalResponse result) {
-                    // Handler fires inside SDL_WaitEvent (which called gc_enter_blocking).
-                    // Temporarily exit blocking to safely call into Haxe, then re-enter.
-                    gc_exit_blocking();
+		NSWindow* keyWindow = [[NSApplication sharedApplication] keyWindow];
+		if (keyWindow == nil) {
+			val_call0(on_cancel_root_->get());
+			delete on_select_root_;
+			delete on_cancel_root_;
+			on_select_root_ = nullptr;
+			on_cancel_root_ = nullptr;
+			return;
+		}
 
-                    if (result == NSModalResponseOK) {
-                      NSURL* url = [panel URL];
-                      [url startAccessingSecurityScopedResource];
-                      [security_scoped_url_ release];
-                      security_scoped_url_ = [url retain];
+		panel_open_ = true;
+		[panel beginSheetModalForWindow:keyWindow
+					  completionHandler:^(NSModalResponse result) {
+						  // Handler fires inside SDL_WaitEvent (which called gc_enter_blocking).
+						  // Temporarily exit blocking to safely call into Haxe, then re-enter.
+						  gc_exit_blocking();
 
-                      const char* path = [[url path] UTF8String];
-                      if (on_select_root_ != nullptr)
-                        val_call1(on_select_root_->get(), alloc_string(path));
-                    } else {
-                      if (on_cancel_root_ != nullptr) val_call0(on_cancel_root_->get());
-                    }
+						  if (result == NSModalResponseOK) {
+							  NSURL* url = [panel URL];
+							  [url startAccessingSecurityScopedResource];
+							  if (security_scoped_url_ != nil) [security_scoped_url_ stopAccessingSecurityScopedResource];
+							  [security_scoped_url_ release];
+							  security_scoped_url_ = [url retain];
 
-                    delete on_select_root_;
-                    delete on_cancel_root_;
-                    on_select_root_ = nullptr;
-                    on_cancel_root_ = nullptr;
+							  const char* path = [[url path] UTF8String];
+							  if (on_select_root_ != nullptr) val_call1(on_select_root_->get(), alloc_string(path));
+						  } else {
+							  if (on_cancel_root_ != nullptr) val_call0(on_cancel_root_->get());
+						  }
 
-                    gc_enter_blocking();
-                  }];
-  }
+						  delete on_select_root_;
+						  delete on_cancel_root_;
+						  on_select_root_ = nullptr;
+						  on_cancel_root_ = nullptr;
+						  panel_open_ = false;
+
+						  gc_enter_blocking();
+					  }];
+	}
 }
 
 extern "C" void filesave_releasePath(void) {
-  if (security_scoped_url_ != nil) {
-    [security_scoped_url_ stopAccessingSecurityScopedResource];
-    [security_scoped_url_ release];
-    security_scoped_url_ = nil;
-  }
+	if (security_scoped_url_ != nil) {
+		[security_scoped_url_ stopAccessingSecurityScopedResource];
+		[security_scoped_url_ release];
+		security_scoped_url_ = nil;
+	}
 }
 
-extern "C" void filesave_saveFile(const char* src, const char* name, const char* mime,
-                                  value callback) {
-  AutoGCRoot* callback_root_ = new AutoGCRoot(callback);
+extern "C" void filesave_saveFile(const char* src, const char* name, const char* mime, bool as_copy, value callback) {
+	if (panel_open_) {
+		val_call1(callback, alloc_bool(false));
+		return;
+	}
 
-  @autoreleasepool {
-    NSSavePanel* panel = [NSSavePanel savePanel];
-    [panel setNameFieldStringValue:[NSString stringWithUTF8String:name]];
-    [panel setCanCreateDirectories:YES];
-    [panel setExtensionHidden:NO];
+	AutoGCRoot* callback_root_ = new AutoGCRoot(callback);
 
-    applyMimeFilter(panel, mime);
+	@autoreleasepool {
+		NSSavePanel* panel = [NSSavePanel savePanel];
+		[panel setNameFieldStringValue:[NSString stringWithUTF8String:name]];
+		[panel setCanCreateDirectories:YES];
+		[panel setExtensionHidden:NO];
 
-    NSString* sourcePath = [NSString stringWithUTF8String:src];
+		applyMimeFilter(panel, mime);
 
-    NSWindow* keyWindow = [[NSApplication sharedApplication] keyWindow];
-    if (keyWindow == nil) {
-      val_call1(callback_root_->get(), alloc_bool(false));
-      delete callback_root_;
-      return;
-    }
+		NSString* sourcePath = [NSString stringWithUTF8String:src];
 
-    [panel beginSheetModalForWindow:keyWindow
-                  completionHandler:^(NSModalResponse result) {
-                    gc_exit_blocking();
+		NSWindow* keyWindow = [[NSApplication sharedApplication] keyWindow];
+		if (keyWindow == nil) {
+			val_call1(callback_root_->get(), alloc_bool(false));
+			delete callback_root_;
+			return;
+		}
 
-                    bool success = false;
-                    if (result == NSModalResponseOK) {
-                      NSURL* destURL = [panel URL];
-                      [destURL startAccessingSecurityScopedResource];
+		panel_open_ = true;
+		[panel beginSheetModalForWindow:keyWindow
+					  completionHandler:^(NSModalResponse result) {
+						  gc_exit_blocking();
 
-                      NSFileManager* fm = [NSFileManager defaultManager];
-                      [fm removeItemAtURL:destURL error:nil];
+						  bool success = false;
+						  if (result == NSModalResponseOK) {
+							  NSURL* destURL = [panel URL];
+							  [destURL startAccessingSecurityScopedResource];
 
-                      NSError* error = nil;
-                      success = [fm copyItemAtPath:sourcePath toPath:[destURL path] error:&error];
+							  NSFileManager* fm = [NSFileManager defaultManager];
+							  NSError* removeError = nil;
+							  [fm removeItemAtURL:destURL error:&removeError];
+							  if (removeError != nil && removeError.code != NSFileNoSuchFileError)
+								  NSLog(@"FileSave: removeItemAtURL failed: %@", removeError);
 
-                      [destURL stopAccessingSecurityScopedResource];
-                    }
+							  NSError* error = nil;
+							  if (as_copy)
+								  success = [fm copyItemAtPath:sourcePath toPath:[destURL path] error:&error];
+							  else
+								  success = [fm moveItemAtPath:sourcePath toPath:[destURL path] error:&error];
 
-                    val_call1(callback_root_->get(), alloc_bool(success));
-                    delete callback_root_;
+							  [destURL stopAccessingSecurityScopedResource];
+						  }
 
-                    gc_enter_blocking();
-                  }];
-  }
+						  val_call1(callback_root_->get(), alloc_bool(success));
+						  delete callback_root_;
+						  panel_open_ = false;
+
+						  gc_enter_blocking();
+					  }];
+	}
 }

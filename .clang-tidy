@@ -1,0 +1,43 @@
+---
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-assignment-in-if-condition,
+  -bugprone-branch-clone,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-implicit-widening-of-multiplication-result,
+  -bugprone-macro-parentheses,
+  -bugprone-narrowing-conversions,
+  -bugprone-signed-char-misuse,
+  cert-*,
+  -cert-err33-c,
+  -cert-err58-cpp,
+  clang-analyzer-*,
+  performance-*,
+  -performance-avoid-endl,
+  -performance-enum-size,
+  readability-function-cognitive-complexity,
+  readability-inconsistent-declaration-parameter-name,
+  readability-misleading-indentation,
+  readability-redundant-control-flow,
+  readability-simplify-boolean-expr,
+  readability-string-compare,
+  readability-identifier-naming
+
+CheckOptions:
+  - key: readability-function-cognitive-complexity.Threshold
+    value: 100
+  - key: readability-identifier-naming.PrivateMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PrivateMemberSuffix
+    value: '_'
+  - key: readability-identifier-naming.GlobalVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalVariableSuffix
+    value: '_'
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: UPPER_CASE
+
+HeaderFilterRegex: '^.*/native/.*\.(h|hpp|c|cpp|mm)$|^.*/project/common/.*\.(h|hpp|cpp)$'
+
+FormatStyle: file
