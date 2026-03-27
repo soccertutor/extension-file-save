@@ -4,8 +4,8 @@
   "license": "MIT",
   "tags": ["openfl", "file", "save", "native"],
   "description": "Cross-platform file save dialog for OpenFL/hxcpp",
-  "version": "0.2.1",
-  "releasenote": "Fix: haxelib install now includes prebuilt ndll binaries (macOS, iOS)",
+  "version": "0.3.0",
+  "releasenote": "saveFile uses move-by-default, bug fixes, mac-x64 CI build added",
   "contributors": ["soccertutor", "AxGord"],
   "dependencies": {}
 }
