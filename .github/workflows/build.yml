@@ -118,6 +118,7 @@ jobs:
           git push origin "$TAG"
 
       - name: Submit to haxelib
+        if: github.repository == 'soccertutor/extension-file-save'
         run: |
           zip -r extension-file-save.zip \
             haxelib.json include.xml README.md \
