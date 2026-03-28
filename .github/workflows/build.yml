@@ -9,7 +9,7 @@ on:
 jobs:
   detect-release:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'soccertutor/extension-file-save'
     outputs:
       is_release: ${{ steps.check.outputs.is_release }}
       version: ${{ steps.check.outputs.version }}
@@ -91,7 +91,7 @@ jobs:
   publish:
     needs: [detect-release, build]
     runs-on: ubuntu-latest
-    if: needs.detect-release.outputs.is_release == 'true'
+    if: needs.detect-release.outputs.is_release == 'true' && github.repository == 'soccertutor/extension-file-save'
     permissions:
       contents: write
     env:
@@ -118,7 +118,6 @@ jobs:
           git push origin "$TAG"
 
       - name: Submit to haxelib
-        if: github.repository == 'soccertutor/extension-file-save'
         run: |
           zip -r extension-file-save.zip \
             haxelib.json include.xml README.md \
