@@ -15,9 +15,7 @@ static id delegate_ = nil;
 		value cb = callback_root_->get();
 		delete callback_root_;
 		callback_root_ = nullptr;
-		gc_exit_blocking();
 		val_call1(cb, alloc_bool(true));
-		gc_enter_blocking();
 	}
 }
 
@@ -26,9 +24,7 @@ static id delegate_ = nil;
 		value cb = callback_root_->get();
 		delete callback_root_;
 		callback_root_ = nullptr;
-		gc_exit_blocking();
 		val_call1(cb, alloc_bool(false));
-		gc_enter_blocking();
 	}
 }
 
