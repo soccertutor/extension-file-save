@@ -44,7 +44,7 @@ jobs:
             ndll_dir: MacArm64
           - target: mac
             label: mac-x64
-            runner: macos-15
+            runner: macos-13
             flags: "-64 -release"
             ndll_dir: Mac64
           - target: ios
