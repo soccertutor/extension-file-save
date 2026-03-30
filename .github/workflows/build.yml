@@ -74,7 +74,8 @@ jobs:
       - name: Install dependencies
         run: |
           haxelib setup ~/haxelib
-          haxelib install hxcpp --quiet
+          curl -sL -o /tmp/hxcpp.zip https://github.com/HaxeFoundation/hxcpp/releases/download/v4.3.140/hxcpp-4.3.140.zip
+          haxelib install /tmp/hxcpp.zip --quiet
           haxelib install lime --quiet
           haxelib dev extension-file-save .
 
