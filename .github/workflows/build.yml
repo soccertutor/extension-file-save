@@ -44,7 +44,7 @@ jobs:
             ndll_dir: MacArm64
           - target: mac
             label: mac-x64
-            runner: macos-13
+            runner: macos-15
             flags: "-64 -release"
             ndll_dir: Mac64
           - target: ios
@@ -68,8 +68,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/haxelib
-          key: haxelib-${{ matrix.target }}-${{ hashFiles('haxelib.json') }}
-          restore-keys: haxelib-${{ matrix.target }}-
+          key: haxelib-${{ matrix.label }}-${{ hashFiles('haxelib.json') }}
+          restore-keys: haxelib-${{ matrix.label }}-
 
       - name: Install dependencies
         run: |
