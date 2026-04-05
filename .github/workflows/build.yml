@@ -122,7 +122,7 @@ jobs:
         run: |
           zip -r extension-file-save.zip \
             haxelib.json include.xml README.md \
-            extension/ native/ project/ ndll/
+            extension/ native/ project/ ndll/ dependencies/
           haxelib submit extension-file-save.zip soccertutor ${{ secrets.HAXELIB_PASSWORD }}
 
       - name: Create GitHub Release
