@@ -75,8 +75,8 @@ jobs:
         shell: bash
         run: |
           haxelib setup ~/haxelib
-          curl -sL -o "$RUNNER_TEMP/hxcpp.zip" https://github.com/HaxeFoundation/hxcpp/releases/download/v4.3.140/hxcpp-4.3.140.zip
-          haxelib install "$RUNNER_TEMP/hxcpp.zip" --quiet
+          git clone --depth 1 -b iphonesim https://github.com/soccertutor/hxcpp.git "$RUNNER_TEMP/hxcpp"
+          haxelib dev hxcpp "$RUNNER_TEMP/hxcpp"
           haxelib install lime --quiet
           haxelib dev extension-file-save .
 

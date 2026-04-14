@@ -4,7 +4,7 @@
   "license": "MIT",
   "tags": ["openfl", "file", "save", "native"],
   "description": "Cross-platform file save dialog for OpenFL/hxcpp",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "releasenote": "Add arm64 iOS Simulator build for Apple Silicon Macs",
   "contributors": ["soccertutor", "AxGord"],
   "dependencies": {}

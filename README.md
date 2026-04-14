@@ -1,18 +1,18 @@
 # extension-file-save
 
-[![Build](https://img.shields.io/github/actions/workflow/status/soccertutor/extension-file-save/build.yml)](https://github.com/soccertutor/extension-file-save/actions/workflows/build.yml) [![Haxelib](https://img.shields.io/badge/haxelib-v0.3.6-blue)](https://lib.haxe.org/p/extension-file-save/) [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Build](https://img.shields.io/github/actions/workflow/status/soccertutor/extension-file-save/build.yml)](https://github.com/soccertutor/extension-file-save/actions/workflows/build.yml) [![Haxelib](https://img.shields.io/badge/haxelib-v0.3.7-blue)](https://lib.haxe.org/p/extension-file-save/) [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 A cross-platform OpenFL/Lime native extension for saving files via native OS file pickers. Supports desktop (direct path write) and mobile (copy-to-destination) workflows.
 
 ## Platform Support
 
-| Platform | Implementation |
-|----------|----------------|
+| Platform | Implementation                      |
+| -------- | ----------------------------------- |
 | macOS    | `NSSavePanel` (security-scoped URL) |
-| Windows  | Lime `FileDialog` wrapper |
-| Linux    | Lime `FileDialog` wrapper |
-| iOS      | `UIDocumentPickerViewController` |
-| Android  | `ACTION_CREATE_DOCUMENT` Intent |
+| Windows  | Lime `FileDialog` wrapper           |
+| Linux    | Lime `FileDialog` wrapper           |
+| iOS      | `UIDocumentPickerViewController`    |
+| Android  | `ACTION_CREATE_DOCUMENT` Intent     |
 
 ## Installation
 
@@ -65,11 +65,11 @@ Or directly via hxcpp:
 haxelib run hxcpp project/Build.xml -D<platform> -DHXCPP_ARM64
 ```
 
-| Target   | lime rebuild          | hxcpp flags                    |
-|----------|-----------------------|--------------------------------|
-| macOS    | `lime rebuild . macos -release`  | `-Dmacos -DHXCPP_ARM64`  |
-| iOS      | `lime rebuild . ios -release`    | `-Diphoneos -DHXCPP_ARM64`|
-| Android  | Built automatically by Gradle    |                           |
+| Target  | lime rebuild                    | hxcpp flags                |
+| ------- | ------------------------------- | -------------------------- |
+| macOS   | `lime rebuild . macos -release` | `-Dmacos -DHXCPP_ARM64`    |
+| iOS     | `lime rebuild . ios -release`   | `-Diphoneos -DHXCPP_ARM64` |
+| Android | Built automatically by Gradle   |                            |
 
 Windows and Linux use Lime's built-in `FileDialog` and do not require a native library build.
 
