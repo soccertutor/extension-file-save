@@ -72,15 +72,21 @@ jobs:
           restore-keys: haxelib-${{ matrix.label }}-
 
       - name: Install dependencies
+        shell: bash
         run: |
           haxelib setup ~/haxelib
-          curl -sL -o /tmp/hxcpp.zip https://github.com/HaxeFoundation/hxcpp/releases/download/v4.3.140/hxcpp-4.3.140.zip
-          haxelib install /tmp/hxcpp.zip --quiet
+          curl -sL -o "$RUNNER_TEMP/hxcpp.zip" https://github.com/HaxeFoundation/hxcpp/releases/download/v4.3.140/hxcpp-4.3.140.zip
+          haxelib install "$RUNNER_TEMP/hxcpp.zip" --quiet
           haxelib install lime --quiet
           haxelib dev extension-file-save .
 
       - name: Build NDLL
         run: haxelib run lime rebuild . ${{ matrix.target }} ${{ matrix.flags }}
+
+      - name: Build NDLL (iOS Simulator arm64)
+        if: matrix.target == 'ios'
+        working-directory: project
+        run: haxelib run hxcpp Build.xml -Diphonesim -DHXCPP_ARM64 -DHXCPP_CPP11 -DMAC_USE_CURRENT_SDK=1
 
       - name: Upload NDLL artifact
         uses: actions/upload-artifact@v4

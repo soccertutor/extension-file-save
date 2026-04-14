@@ -4,8 +4,8 @@
   "license": "MIT",
   "tags": ["openfl", "file", "save", "native"],
   "description": "Cross-platform file save dialog for OpenFL/hxcpp",
-  "version": "0.3.5",
-  "releasenote": "Fix Android: include dependencies/ in haxelib package",
+  "version": "0.3.6",
+  "releasenote": "Add arm64 iOS Simulator build for Apple Silicon Macs",
   "contributors": ["soccertutor", "AxGord"],
   "dependencies": {}
 }
