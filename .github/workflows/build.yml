@@ -75,8 +75,8 @@ jobs:
         shell: bash
         run: |
           haxelib setup ~/haxelib
-          git clone --depth 1 -b iphonesim https://github.com/soccertutor/hxcpp.git "$RUNNER_TEMP/hxcpp"
-          haxelib dev hxcpp "$RUNNER_TEMP/hxcpp"
+          curl -sL -o "$RUNNER_TEMP/hxcpp.zip" https://github.com/soccertutor/hxcpp/releases/download/v4.3.141-iphonesim/hxcpp-4.3.141-iphonesim.zip
+          haxelib install "$RUNNER_TEMP/hxcpp.zip" --quiet
           haxelib install lime --quiet
           haxelib dev extension-file-save .
 

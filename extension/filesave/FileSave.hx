@@ -92,11 +92,11 @@ import sys.io.File;
 
 	private static function extensionFromMime(mime: String): String {
 		return switch mime {
-			case 'video/mp4': '*.mp4';
-			case 'application/pdf': '*.pdf';
-			case 'image/jpeg': '*.jpg';
-			case 'image/png': '*.png';
-			case _: '*.*';
+			case 'video/mp4': 'mp4';
+			case 'application/pdf': 'pdf';
+			case 'image/jpeg': 'jpg';
+			case 'image/png': 'png';
+			case _: '';
 		};
 	}
 	#elseif android
