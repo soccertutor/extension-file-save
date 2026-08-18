@@ -10,6 +10,9 @@
 
 extern "C" {
 void filesave_requestSavePath(const char* name, const char* mime, value onSelect, value onCancel);
+#ifdef HX_MACOS
+void filesave_requestOpenPath(const char* extensions, const char* defaultPath, const char* title, value onSelect, value onCancel);
+#endif
 void filesave_releasePath(void);
 void filesave_saveFile(const char* src, const char* name, const char* mime, bool as_copy, value callback);
 }
@@ -18,6 +21,13 @@ void fs_requestSavePath(const char* name, const char* mime, value onSelect, valu
 	filesave_requestSavePath(name, mime, onSelect, onCancel);
 }
 DEFINE_PRIME4v(fs_requestSavePath);
+
+#ifdef HX_MACOS
+void fs_requestOpenPath(const char* extensions, const char* defaultPath, const char* title, value onSelect, value onCancel) {
+	filesave_requestOpenPath(extensions, defaultPath, title, onSelect, onCancel);
+}
+DEFINE_PRIME5v(fs_requestOpenPath);
+#endif
 
 void fs_releasePath() {
 	filesave_releasePath();

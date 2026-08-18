@@ -1,0 +1,14 @@
+{
+	"resolutionLibs": ["lime"],
+	"rules": {
+		"naming": {
+			"enabled": false
+		},
+		"unused-parameter": {
+			"enabled": false
+		},
+		"avoid-dynamic": {
+			"enabled": false
+		}
+	}
+}
